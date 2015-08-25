@@ -19,6 +19,7 @@ ruby_src_dir = File.join src_dir, "scripts", "ruby"
 
 begin
   nr_processors = `grep processor /proc/cpuinfo | wc -l` # speed up compilation, Linux only
+  nr_processors = 1 if nr_processors.blank?
 rescue
   nr_processors = 1
 end
@@ -27,12 +28,11 @@ begin
   Dir.chdir main_dir do
     FileUtils.rm_rf src_dir
     puts "Downloading OpenBabel sources"
-    system "curl -L -d use_mirror=netcologne 'http://downloads.sourceforge.net/project/openbabel/openbabel/#{ob_num_ver}/openbabel-#{ob_num_ver}.tar.gz' | tar xz"
+    system "curl -L 'http://github.com/cubuslab/openbabel/archive/master.tar.gz' | tar xz"
+    system "mv openbabel-master #{ob_ver}"
     system "sed -i -e 's/-Wl,-flat_namespace//;s/-flat_namespace//' #{File.join ruby_src_dir, "extconf.rb"}" # remove unrecognized compiler option
     system "sed -i -e 's/Init_OpenBabel/Init_openbabel/g' #{File.join ruby_src_dir,"*cpp"}" # fix swig bindings
-    system "sed  -i -e 's/Config::CONFIG/RbConfig::CONFIG/' #{File.join src_dir, "scripts", "CMakeLists.txt" }" # fix Ruby Config
-    system "sed  -i -e 's/Config::CONFIG/RbConfig::CONFIG/' #{File.join ruby_src_dir, "extconf.rb" }" # fix Ruby Config
-  end
+end
   FileUtils.mkdir_p build_dir
   FileUtils.mkdir_p install_dir
   Dir.chdir build_dir do
@@ -49,7 +49,7 @@ begin
     Dir.chdir build_dir do
       puts "OpenBabel not installed. Compiling sources."
       system "make -j#{nr_processors}"
-      system "make install"
+      system "make -j#{nr_processors} install"
       ENV["PKG_CONFIG_PATH"] = File.dirname(File.expand_path(Dir["#{install_dir}/**/openbabel*pc"].first))
     end
   end
