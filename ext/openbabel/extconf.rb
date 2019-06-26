@@ -28,7 +28,7 @@ begin
   Dir.chdir main_dir do
     FileUtils.rm_rf src_dir
     puts "Downloading OpenBabel sources"
-    system "curl -L 'http://github.com/cubuslab/openbabel/archive/master.tar.gz' | tar xz"
+    system "git clone https://github.com/ComPlat/openbabel.git"
     system "mv openbabel-master #{ob_ver}"
     system "sed -i -e 's/-Wl,-flat_namespace//;s/-flat_namespace//' #{File.join ruby_src_dir, "extconf.rb"}" # remove unrecognized compiler option
     system "sed -i -e 's/Init_OpenBabel/Init_openbabel/g' #{File.join ruby_src_dir,"*cpp"}" # fix swig bindings
